@@ -1540,8 +1540,8 @@ function animate(currentTime = 0) {
     // Animate character running
     animateCharacter(currentTime);
 
-    // Animate elPresidente
-    animateelPresidente(currentTime);
+    // Animate chaser
+    animateChaser(currentTime);
 
     // Check collisions
     checkCollisions();
@@ -1642,7 +1642,7 @@ function animateCharacter(time) {
     }
 }
 
-function animateelPresidente(time) {
+function animateChaser(time) {
     const runCycle = Math.sin(time * 0.012) * 0.3;
 
     // Make elPresidente follow player's lane
@@ -1671,31 +1671,26 @@ function animateelPresidente(time) {
         elPresidente.scale.setScalar(1);
     }
 
-    // Shotgun flash effect (random shots when close)
-    if (elPresidente.shotgunFlash && elPresidente.position.z < 12) {
-        if (Math.random() < 0.02) { // 2% chance per frame
-            elPresidente.shotgunFlash.visible = true;
-            elPresidente.shotgunFlash.scale.setScalar(0.5 + Math.random());
-            setTimeout(() => {
-                if (elPresidente.shotgunFlash) elPresidente.shotgunFlash.visible = false;
-            }, 50);
-        }
+    // Scepter glow effect when close
+    if (elPresidente.scepter && elPresidente.position.z < 12) {
+        // Make scepter bob menacingly
+        elPresidente.scepter.rotation.z = Math.sin(time * 0.02) * 0.1;
     }
 
-    // Update elPresidente distance in HUD
-    const elPresidenteDist = Math.max(0, Math.floor(elPresidente.position.z));
-    document.getElementById('elPresidente-dist').textContent = elPresidenteDist;
+    // Update chaser distance in HUD
+    const chaserDist = Math.max(0, Math.floor(elPresidente.position.z));
+    document.getElementById('chaser-dist').textContent = chaserDist;
 
     // Update danger bar (inverse of distance - closer = more danger)
     const dangerPercent = Math.min(100, Math.max(0, (15 - elPresidente.position.z) / 15 * 100));
     document.getElementById('danger-fill').style.width = dangerPercent + '%';
 
-    // Pulse the elPresidente distance display when danger is high
-    const elPresidenteDisplay = document.getElementById('elPresidente-distance');
+    // Pulse the chaser distance display when danger is high
+    const chaserDisplay = document.getElementById('chaser-distance');
     if (dangerPercent > 70) {
-        elPresidenteDisplay.style.animation = 'introFlash 0.3s ease-in-out infinite alternate';
+        chaserDisplay.style.animation = 'introFlash 0.3s ease-in-out infinite alternate';
     } else {
-        elPresidenteDisplay.style.animation = 'none';
+        chaserDisplay.style.animation = 'none';
     }
 }
 
@@ -2100,12 +2095,6 @@ function playCatchAnimation() {
     elPresidente.position.z = 3;
     elPresidente.position.x = character.position.x;
     elPresidente.scale.setScalar(1.3);
-
-    // Shotgun flash burst
-    if (elPresidente.shotgunFlash) {
-        elPresidente.shotgunFlash.visible = true;
-        elPresidente.shotgunFlash.scale.setScalar(2);
-    }
 
     // Character reacts - falls back
     character.rotation.x = -0.8;
