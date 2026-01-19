@@ -61,7 +61,7 @@ export default function Game() {
             <span id="coin-count">0</span>
           </div>
           <div id="kids-display">
-            <div className="kids-icon">ðŸ‘¦</div>
+            <div className="kids-icon">👦</div>
             <span id="kids-count">0</span>
           </div>
           <div id="distance-display">
@@ -74,7 +74,7 @@ export default function Game() {
 
         {/* El Presidente Distance Indicator */}
         <div id="chaser-distance">
-          <div className="chaser-icon">âš–ï¸</div>
+          <div className="chaser-icon">🎖️</div>
           <span id="chaser-dist">15</span>m
           <div className="danger-bar">
             <div className="danger-fill" id="danger-fill"></div>
@@ -100,15 +100,15 @@ export default function Game() {
             {/* Tab Navigation */}
             <div className="tab-nav">
               <button className="tab-btn active" data-tab="play">
-                <span className="tab-icon">ðŸŽ®</span>
+                <span className="tab-icon">🎮</span>
                 <span className="tab-text">PLAY</span>
               </button>
               <button className="tab-btn" data-tab="leaderboard">
-                <span className="tab-icon">ðŸ†</span>
+                <span className="tab-icon">🏆</span>
                 <span className="tab-text">SCORES</span>
               </button>
               <button className="tab-btn" data-tab="settings">
-                <span className="tab-icon">âš™ï¸</span>
+                <span className="tab-icon">⚙️</span>
                 <span className="tab-text">SETTINGS</span>
               </button>
             </div>
@@ -162,17 +162,17 @@ export default function Game() {
                     <span>DISTANCE</span>
                   </div>
                   <div className="leaderboard-row gold">
-                    <span className="rank">ðŸ¥‡</span>
+                    <span className="rank">🥇</span>
                     <span className="lb-score" id="lb-score-1">---</span>
                     <span className="lb-dist" id="lb-dist-1">---</span>
                   </div>
                   <div className="leaderboard-row silver">
-                    <span className="rank">ðŸ¥ˆ</span>
+                    <span className="rank">🥈</span>
                     <span className="lb-score" id="lb-score-2">---</span>
                     <span className="lb-dist" id="lb-dist-2">---</span>
                   </div>
                   <div className="leaderboard-row bronze">
-                    <span className="rank">ðŸ¥‰</span>
+                    <span className="rank">🥉</span>
                     <span className="lb-score" id="lb-score-3">---</span>
                     <span className="lb-dist" id="lb-dist-3">---</span>
                   </div>
@@ -231,7 +231,7 @@ export default function Game() {
         <div id="gameover-screen" className="overlay hidden">
           <div className="gameover-container">
             <h1 className="game-over-title">YOU GOT CAUGHT</h1>
-            <div className="handcuffs-icon">â›“ï¸</div>
+            <div className="handcuffs-icon">⛓️</div>
             <p className="caught-text" id="caught-text">You&apos;ve been caught!</p>
             <div className="final-stats">
               <div className="stat-row">
