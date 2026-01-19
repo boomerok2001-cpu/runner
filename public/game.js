@@ -111,9 +111,59 @@ const ENVIRONMENTS = [
         road: 0x202520,
         buildings: [0x354035, 0x405040, 0x253025],
         ambient: 0x223322,
-        windowLight: 0x44ff44
     }
 ];
+
+// ============================================
+// POWER-UPS CONFIGURATION
+// ============================================
+const POWERUPS = {
+    speedBoost: {
+        name: 'Speed Boost',
+        color: 0x00aaff,
+        glowColor: 0x0066ff,
+        duration: 5000,
+        icon: '⚡',
+        effect: 'speedMultiplier'
+    },
+    shield: {
+        name: 'Shield',
+        color: 0xffdd00,
+        glowColor: 0xffaa00,
+        duration: 6000,
+        icon: '🛡️',
+        effect: 'immunity'
+    },
+    coinMagnet: {
+        name: 'Coin Magnet',
+        color: 0xff00ff,
+        glowColor: 0xaa00aa,
+        duration: 8000,
+        icon: '🧲',
+        effect: 'magnetize'
+    },
+    slowMo: {
+        name: 'Slow-Mo',
+        color: 0x9900ff,
+        glowColor: 0x6600aa,
+        duration: 4000,
+        icon: '⏱️',
+        effect: 'slowTime'
+    },
+    invisibility: {
+        name: 'Invisibility',
+        color: 0x00ff88,
+        glowColor: 0x00aa55,
+        duration: 5000,
+        icon: '👻',
+        effect: 'invisible'
+    }
+};
+
+const powerUpTypes = Object.keys(POWERUPS);
+let powerUpItems = [];
+let activePowerUp = null;
+let powerUpEndTime = 0;
 
 // ============================================
 // AUDIO SYSTEM
@@ -902,6 +952,10 @@ function generateTile() {
         if (Math.random() < CONFIG.kidsFrequency) {
             addKids(tile, -nextTileZ);
         }
+        // Rare power-up spawn (5% chance)
+        if (Math.random() < 0.05) {
+            addPowerUp(tile, -nextTileZ);
+        }
     }
 
     nextTileZ += CONFIG.tileLength;
@@ -1332,6 +1386,182 @@ function createKidItem(tile, x, y, z, tileZ) {
 }
 
 // ============================================
+// POWER-UPS
+// ============================================
+function addPowerUp(tile, tileZ) {
+    const typeKey = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
+    const powerUpConfig = POWERUPS[typeKey];
+
+    const lane = Math.floor(Math.random() * 3) - 1;
+    const laneX = lane * CONFIG.laneWidth;
+    const zOffset = (Math.random() - 0.5) * 15;
+
+    const powerUp = new THREE.Group();
+
+    // Outer glowing ring
+    const ringMat = new THREE.MeshBasicMaterial({
+        color: powerUpConfig.glowColor,
+        transparent: true,
+        opacity: 0.5
+    });
+    const ring = new THREE.Mesh(
+        new THREE.TorusGeometry(0.8, 0.1, 8, 24),
+        ringMat
+    );
+    ring.rotation.x = Math.PI / 2;
+    powerUp.add(ring);
+
+    // Inner sphere
+    const sphereMat = new THREE.MeshLambertMaterial({
+        color: powerUpConfig.color,
+        emissive: powerUpConfig.color,
+        emissiveIntensity: 0.5
+    });
+    const sphere = new THREE.Mesh(
+        new THREE.SphereGeometry(0.5, 16, 16),
+        sphereMat
+    );
+    powerUp.add(sphere);
+
+    // Point light for glow
+    const glow = new THREE.PointLight(powerUpConfig.color, 1, 8);
+    powerUp.add(glow);
+
+    powerUp.position.set(laneX, 2, zOffset);
+    powerUp.worldZ = tileZ + zOffset;
+    powerUp.collected = false;
+    powerUp.powerUpType = typeKey;
+    powerUp.ring = ring;
+    powerUp.sphere = sphere;
+
+    tile.add(powerUp);
+    powerUpItems.push(powerUp);
+}
+
+function collectPowerUp(powerUp) {
+    if (powerUp.collected) return;
+    powerUp.collected = true;
+    powerUp.visible = false;
+
+    const config = POWERUPS[powerUp.powerUpType];
+    activatePowerUp(powerUp.powerUpType, config);
+    AudioSystem.playCoinSound(); // Use coin sound for now
+}
+
+function activatePowerUp(type, config) {
+    activePowerUp = type;
+    powerUpEndTime = performance.now() + config.duration;
+
+    // Show power-up indicator
+    showPowerUpIndicator(config);
+
+    // Apply immediate effects
+    if (type === 'speedBoost') {
+        gameState.speed *= 1.5;
+    }
+}
+
+function updatePowerUps(currentTime) {
+    // Animate power-ups (rotation and bobbing)
+    powerUpItems.forEach(pu => {
+        if (!pu.collected && pu.ring) {
+            pu.ring.rotation.z += 0.05;
+            pu.position.y = 2 + Math.sin(currentTime * 0.005) * 0.3;
+        }
+    });
+
+    // Check if active power-up expired
+    if (activePowerUp && currentTime >= powerUpEndTime) {
+        deactivatePowerUp();
+    }
+
+    // Apply ongoing effects
+    if (activePowerUp) {
+        applyPowerUpEffects();
+    }
+}
+
+function applyPowerUpEffects() {
+    switch (activePowerUp) {
+        case 'coinMagnet':
+            // Attract nearby coins
+            moneyItems.forEach(money => {
+                if (!money.collected) {
+                    const dx = character.position.x - money.position.x;
+                    const dz = character.position.z - (money.worldZ - gameState.distance);
+                    const dist = Math.sqrt(dx * dx + dz * dz);
+                    if (dist < 8) {
+                        money.position.x += dx * 0.1;
+                    }
+                }
+            });
+            break;
+        case 'slowMo':
+            // Slow effect applied in game loop
+            break;
+    }
+}
+
+function deactivatePowerUp() {
+    // Reverse effects
+    if (activePowerUp === 'speedBoost') {
+        gameState.speed = Math.min(gameState.speed / 1.5, CONFIG.maxSpeed);
+    }
+
+    activePowerUp = null;
+    hidePowerUpIndicator();
+}
+
+function isShielded() {
+    return activePowerUp === 'shield';
+}
+
+function isInvisible() {
+    return activePowerUp === 'invisibility';
+}
+
+function getSlowMoMultiplier() {
+    return activePowerUp === 'slowMo' ? 0.4 : 1.0;
+}
+
+function showPowerUpIndicator(config) {
+    let indicator = document.getElementById('powerup-indicator');
+    if (!indicator) {
+        indicator = document.createElement('div');
+        indicator.id = 'powerup-indicator';
+        indicator.style.cssText = `
+            position: fixed;
+            top: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        `;
+        document.getElementById('game-container').appendChild(indicator);
+    }
+
+    indicator.innerHTML = `<span style="font-size: 20px;">${config.icon}</span> ${config.name}`;
+    indicator.style.display = 'flex';
+    indicator.style.borderColor = '#' + config.color.toString(16).padStart(6, '0');
+    indicator.style.border = `2px solid #${config.color.toString(16).padStart(6, '0')}`;
+}
+
+function hidePowerUpIndicator() {
+    const indicator = document.getElementById('powerup-indicator');
+    if (indicator) {
+        indicator.style.display = 'none';
+    }
+}
+
+// ============================================
 // CONTROLS
 // ============================================
 function setupControls() {
@@ -1517,7 +1747,9 @@ function animate(currentTime = 0) {
     const deltaMultiplier = deltaTime / targetFrameTime;
 
     // Update game speed (gradually increase)
-    gameState.speed = Math.min(gameState.speed + CONFIG.speedIncrease * deltaMultiplier, CONFIG.maxSpeed);
+    // Update game speed (gradually increase)
+    // Apply slow-mo multiplier
+    gameState.speed = Math.min(gameState.speed + CONFIG.speedIncrease * deltaMultiplier, CONFIG.maxSpeed) * getSlowMoMultiplier();
 
     // Move everything towards player (smooth with delta)
     const moveAmount = gameState.speed * deltaMultiplier;
@@ -1538,6 +1770,9 @@ function animate(currentTime = 0) {
     // Update environment based on distance
     updateEnvironment();
 
+    // Update power-ups
+    updatePowerUps(currentTime);
+
     // Update character
     updateCharacter(currentTime);
 
@@ -1555,6 +1790,9 @@ function animate(currentTime = 0) {
 
     // Collect kids
     collectKids();
+
+    // Collect power-ups
+    collectPowerUps();
 
     // Generate new tiles and remove old ones
     manageTiles();
@@ -1713,6 +1951,9 @@ function checkCollisions() {
     const charY = character.position.y;
 
     obstacles.forEach(obstacle => {
+        // Shield or Invisibility protects from obstacles
+        if (isShielded() || isInvisible()) return;
+
         if (!obstacle.hit) {
             const obsZ = obstacle.parent.position.z + obstacle.position.z;
             const obsLane = obstacle.lane;
@@ -1734,9 +1975,26 @@ function checkCollisions() {
     });
 
     // Check if elPresidente caught up
-    if (elPresidente.position.z < CONFIG.elPresidenteCatchDistance) {
+    // Invisibility or Shield protects from being caught
+    if ((!isInvisible() && !isShielded()) && elPresidente.position.z < CONFIG.chaserCatchDistance) {
         gameOver('caught');
     }
+}
+
+function collectPowerUps() {
+    const charX = character.position.x;
+
+    powerUpItems.forEach(pu => {
+        if (!pu.collected && pu.parent) {
+            const puZ = pu.parent.position.z + pu.position.z;
+            const puX = pu.position.x;
+
+            // Check collection
+            if (Math.abs(puZ) < 2 && Math.abs(puX - charX) < 2) {
+                collectPowerUp(pu);
+            }
+        }
+    });
 }
 
 function collectMoney() {
@@ -1832,6 +2090,7 @@ function manageTiles() {
     obstacles = obstacles.filter(obs => obs.parent && obs.parent.parent === scene);
     moneyItems = moneyItems.filter(m => m.parent && m.parent.parent === scene);
     kidItems = kidItems.filter(k => k.parent && k.parent.parent === scene);
+    powerUpItems = powerUpItems.filter(p => p.parent && p.parent.parent === scene);
 
     while (tiles.length < CONFIG.visibleTiles) {
         generateTile();
@@ -1963,7 +2222,8 @@ function playIntroAnimation(callback) {
     elPresidente.position.z = 8;
     elPresidente.position.x = 0;
     elPresidente.scale.setScalar(1.3);
-    if (elPresidente.shotgunFlash) elPresidente.shotgunFlash.visible = true;
+    elPresidente.scale.setScalar(1.3);
+    // shotgunFlash reference removed
 
     // Character ready
     character.position.set(0, 0, 0);
@@ -1978,8 +2238,7 @@ function playIntroAnimation(callback) {
     // Quick animation - camera settles and game starts
     setTimeout(() => {
         introEl.classList.add('hidden');
-        if (elPresidente.shotgunFlash) elPresidente.shotgunFlash.visible = false;
-        elPresidente.position.z = CONFIG.elPresidenteDistance;
+        elPresidente.position.z = CONFIG.chaserDistance;
         elPresidente.scale.setScalar(1);
         camera.position.set(0, 10, 20);
         callback();
@@ -1994,7 +2253,9 @@ function restartGame() {
     tiles = [];
     obstacles = [];
     moneyItems = [];
+    moneyItems = [];
     kidItems = [];
+    powerUpItems = [];
     nextTileZ = 0;
 
     // Regenerate path
@@ -2003,7 +2264,8 @@ function restartGame() {
     }
 
     // Reset elPresidente position
-    elPresidente.position.z = CONFIG.elPresidenteDistance;
+    // Reset elPresidente position
+    elPresidente.position.z = CONFIG.chaserDistance;
     elPresidente.position.x = 0;
     elPresidente.scale.setScalar(1);
 
@@ -2027,6 +2289,11 @@ function resetGameState() {
     gameState.isSliding = false;
     gameState.isPaused = false;
     gameState.currentEnvironment = 0;
+
+    // Reset power-ups
+    activePowerUp = null;
+    powerUpEndTime = 0;
+    hidePowerUpIndicator();
 
     // Reset difficulty to initial values
     CONFIG.obstacleFrequency = 0.4;
