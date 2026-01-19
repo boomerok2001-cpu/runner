@@ -239,8 +239,8 @@ export default function Game() {
                 <span className="stat-value"><span id="final-distance">0</span>m</span>
               </div>
               <div className="stat-row">
-                <span className="stat-label">Money</span>
-                <span className="stat-value">$<span id="final-coins">0</span></span>
+                <span className="stat-label">Coins</span>
+                <span className="stat-value"><span id="final-coins">0</span></span>
               </div>
               <div className="stat-row">
                 <span className="stat-label">Kids</span>
