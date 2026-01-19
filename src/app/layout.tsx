@@ -15,11 +15,11 @@ const geistMono = Geist_Mono({
 const APP_URL = process.env.NEXT_PUBLIC_URL || "https://run-from-justice.vercel.app";
 
 export const metadata: Metadata = {
-  title: "Run From Justice",
-  description: "Can you escape the long arm of the law? An endless runner game.",
+  title: "Run From El Presidente",
+  description: "Can you escape the dictator's grasp? An endless runner game.",
   openGraph: {
-    title: "Run From Justice",
-    description: "Can you escape the long arm of the law?",
+    title: "Run From El Presidente",
+    description: "Can you escape the dictator's grasp?",
     images: [`${APP_URL}/splash.png`],
   },
   other: {
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
         title: "Play Now",
         action: {
           type: "launch_miniapp",
-          name: "Run From Justice",
+          name: "Run From El Presidente",
           url: APP_URL,
           splashImageUrl: `${APP_URL}/splash.png`,
           splashBackgroundColor: "#0d0d0d",

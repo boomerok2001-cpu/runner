@@ -1,4 +1,4 @@
-// Run From Justice - Browser Game
+﻿// Run From Justice - Browser Game
 // Satirical Endless Runner
 
 // ============================================
@@ -24,10 +24,10 @@ const CONFIG = {
     slideDuration: 600,
     laneChangeDuration: 150,
 
-    // Trump chaser - Balanced pressure
-    trumpDistance: 11,
-    trumpSpeedMultiplier: 0.983,
-    trumpCatchDistance: 3,
+    // elPresidente chaser - Balanced pressure
+    chaserDistance: 11,
+    chaserSpeedMultiplier: 0.983,
+    chaserCatchDistance: 3,
 
     // Scoring
     moneyValue: 100,
@@ -354,7 +354,7 @@ const AudioSystem = {
 // THREE.JS SETUP
 // ============================================
 let scene, camera, renderer;
-let character, trump;
+let character, elPresidente;
 let tiles = [];
 let obstacles = [];
 let moneyItems = [];
@@ -374,7 +374,7 @@ function init() {
     scene.background = new THREE.Color(0x0a0a1a);
     scene.fog = new THREE.Fog(0x0a0a1a, 60, 150); // Less fog for visibility
 
-    // Camera - positioned higher to see Trump behind player
+    // Camera - positioned higher to see elPresidente behind player
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 200);
     camera.position.set(0, 10, 20);
     camera.lookAt(0, 2, 0);
@@ -395,8 +395,8 @@ function init() {
     // Lighting
     setupLighting();
 
-    // Create Trump chaser
-    createTrump();
+    // Create elPresidente chaser
+    createElPresidente();
 
     // Generate initial path
     for (let i = 0; i < CONFIG.visibleTiles; i++) {
@@ -638,200 +638,201 @@ function createCharacter(charType = 'diddy') {
 }
 
 // ============================================
-// TRUMP CHASER CREATION
+// elPresidente CHASER CREATION (Cartoon Dictator)
 // ============================================
-function createTrump() {
-    trump = new THREE.Group();
+function createElPresidente() {
+    elPresidente = new THREE.Group();
 
-    const skinMat = new THREE.MeshLambertMaterial({ color: 0xffcc99 }); // Orange-ish skin
-    const suitMat = new THREE.MeshLambertMaterial({ color: 0x1a1a4a }); // Navy suit
-    const tieMat = new THREE.MeshLambertMaterial({ color: 0xcc0000 }); // Red tie
-    const hairMat = new THREE.MeshLambertMaterial({ color: 0xffdd44 }); // Blonde/orange hair
-    const shoeMat = new THREE.MeshLambertMaterial({ color: 0x1a1a1a });
+    const skinMat = new THREE.MeshLambertMaterial({ color: 0xd4a574 }); // Tan skin
+    const uniformMat = new THREE.MeshLambertMaterial({ color: 0x2a4a2a }); // Military olive green
+    const goldMat = new THREE.MeshLambertMaterial({ color: 0xffd700 }); // Gold for medals/trim
+    const capMat = new THREE.MeshLambertMaterial({ color: 0x1a3a1a }); // Dark green cap
+    const bootMat = new THREE.MeshLambertMaterial({ color: 0x1a1a1a }); // Black boots
 
-    // Larger body (intimidating)
+    // Larger body (intimidating military uniform)
     const torso = new THREE.Mesh(
         new THREE.BoxGeometry(2, 2.2, 1),
-        suitMat
+        uniformMat
     );
     torso.position.y = 3;
-    trump.add(torso);
+    elPresidente.add(torso);
 
-    // Red tie
-    const tie = new THREE.Mesh(
-        new THREE.BoxGeometry(0.3, 1.5, 0.1),
-        tieMat
+    // Military medals/decorations
+    for (let i = 0; i < 3; i++) {
+        const medal = new THREE.Mesh(
+            new THREE.BoxGeometry(0.2, 0.25, 0.1),
+            goldMat
+        );
+        medal.position.set(-0.4 + i * 0.3, 3.3, 0.55);
+        elPresidente.add(medal);
+    }
+
+    // Shoulder epaulettes (gold)
+    const epauletteMat = new THREE.MeshLambertMaterial({ color: 0xffd700 });
+    const leftEpaulette = new THREE.Mesh(
+        new THREE.BoxGeometry(0.6, 0.15, 0.5),
+        epauletteMat
     );
-    tie.position.set(0, 2.8, 0.55);
-    trump.add(tie);
+    leftEpaulette.position.set(-1.1, 4, 0);
+    elPresidente.add(leftEpaulette);
 
-    // Head (larger)
+    const rightEpaulette = new THREE.Mesh(
+        new THREE.BoxGeometry(0.6, 0.15, 0.5),
+        epauletteMat
+    );
+    rightEpaulette.position.set(1.1, 4, 0);
+    elPresidente.add(rightEpaulette);
+
+    // Head
     const head = new THREE.Mesh(
-        new THREE.BoxGeometry(1.2, 1.2, 1),
+        new THREE.SphereGeometry(0.65, 12, 12),
         skinMat
     );
-    head.position.y = 4.8;
-    trump.add(head);
+    head.position.y = 4.9;
+    elPresidente.add(head);
 
-    // Iconic hair
-    const hairTop = new THREE.Mesh(
-        new THREE.BoxGeometry(1.4, 0.4, 1.2),
-        hairMat
+    // Military peaked cap
+    const capBrim = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.8, 0.8, 0.08, 16),
+        capMat
     );
-    hairTop.position.y = 5.5;
-    hairTop.position.z = -0.1;
-    trump.add(hairTop);
+    capBrim.position.set(0, 5.3, 0.2);
+    capBrim.rotation.x = 0.2;
+    elPresidente.add(capBrim);
 
-    // Hair swoosh
-    const hairSwoosh = new THREE.Mesh(
-        new THREE.BoxGeometry(0.6, 0.3, 0.4),
-        hairMat
+    const capTop = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.6, 0.7, 0.4, 16),
+        capMat
     );
-    hairSwoosh.position.set(0.5, 5.3, 0.5);
-    hairSwoosh.rotation.z = 0.3;
-    trump.add(hairSwoosh);
+    capTop.position.y = 5.5;
+    elPresidente.add(capTop);
 
-    // Eyes (determined look)
+    // Gold cap emblem
+    const emblem = new THREE.Mesh(
+        new THREE.BoxGeometry(0.3, 0.3, 0.1),
+        goldMat
+    );
+    emblem.position.set(0, 5.35, 0.65);
+    elPresidente.add(emblem);
+
+    // Eyes (menacing look)
     const eyeWhiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    const eyePupilMat = new THREE.MeshBasicMaterial({ color: 0x4488ff });
+    const eyePupilMat = new THREE.MeshBasicMaterial({ color: 0x1a1a1a });
 
     const leftEyeWhite = new THREE.Mesh(
-        new THREE.BoxGeometry(0.25, 0.15, 0.1),
+        new THREE.SphereGeometry(0.12, 8, 8),
         eyeWhiteMat
     );
-    leftEyeWhite.position.set(-0.25, 4.9, 0.55);
-    trump.add(leftEyeWhite);
+    leftEyeWhite.position.set(-0.2, 4.95, 0.55);
+    elPresidente.add(leftEyeWhite);
 
     const rightEyeWhite = new THREE.Mesh(
-        new THREE.BoxGeometry(0.25, 0.15, 0.1),
+        new THREE.SphereGeometry(0.12, 8, 8),
         eyeWhiteMat
     );
-    rightEyeWhite.position.set(0.25, 4.9, 0.55);
-    trump.add(rightEyeWhite);
+    rightEyeWhite.position.set(0.2, 4.95, 0.55);
+    elPresidente.add(rightEyeWhite);
 
     const leftPupil = new THREE.Mesh(
-        new THREE.BoxGeometry(0.1, 0.1, 0.05),
+        new THREE.SphereGeometry(0.06, 6, 6),
         eyePupilMat
     );
-    leftPupil.position.set(-0.25, 4.9, 0.6);
-    trump.add(leftPupil);
+    leftPupil.position.set(-0.2, 4.95, 0.65);
+    elPresidente.add(leftPupil);
 
     const rightPupil = new THREE.Mesh(
-        new THREE.BoxGeometry(0.1, 0.1, 0.05),
+        new THREE.SphereGeometry(0.06, 6, 6),
         eyePupilMat
     );
-    rightPupil.position.set(0.25, 4.9, 0.6);
-    trump.add(rightPupil);
+    rightPupil.position.set(0.2, 4.95, 0.65);
+    elPresidente.add(rightPupil);
 
-    // Mouth (slight frown)
-    const mouth = new THREE.Mesh(
-        new THREE.BoxGeometry(0.4, 0.1, 0.05),
-        new THREE.MeshLambertMaterial({ color: 0xcc6666 })
+    // Thick bushy mustache (dictator style)
+    const mustacheMat = new THREE.MeshLambertMaterial({ color: 0x1a1a1a });
+    const mustache = new THREE.Mesh(
+        new THREE.BoxGeometry(0.5, 0.12, 0.15),
+        mustacheMat
     );
-    mouth.position.set(0, 4.4, 0.55);
-    trump.add(mouth);
+    mustache.position.set(0, 4.6, 0.6);
+    elPresidente.add(mustache);
+
+    // Mouth (stern frown)
+    const mouth = new THREE.Mesh(
+        new THREE.BoxGeometry(0.3, 0.08, 0.05),
+        new THREE.MeshLambertMaterial({ color: 0x8b4513 })
+    );
+    mouth.position.set(0, 4.45, 0.6);
+    elPresidente.add(mouth);
 
     // Arms (reaching forward)
     const armGeo = new THREE.BoxGeometry(0.5, 1.8, 0.5);
 
-    const leftArm = new THREE.Mesh(armGeo, suitMat);
+    const leftArm = new THREE.Mesh(armGeo, uniformMat);
     leftArm.position.set(-1.2, 2.5, 0.5);
     leftArm.rotation.x = -0.5;
-    trump.add(leftArm);
-    trump.leftArm = leftArm;
+    elPresidente.add(leftArm);
+    elPresidente.leftArm = leftArm;
 
-    const rightArm = new THREE.Mesh(armGeo, suitMat);
+    const rightArm = new THREE.Mesh(armGeo, uniformMat);
     rightArm.position.set(1.2, 2.5, 0.5);
     rightArm.rotation.x = -0.5;
-    trump.add(rightArm);
-    trump.rightArm = rightArm;
+    elPresidente.add(rightArm);
+    elPresidente.rightArm = rightArm;
 
-    // Hands (holding shotgun)
-    const handGeo = new THREE.BoxGeometry(0.4, 0.4, 0.4);
+    // Hands
+    const handGeo = new THREE.BoxGeometry(0.35, 0.35, 0.35);
     const leftHand = new THREE.Mesh(handGeo, skinMat);
     leftHand.position.set(-0.8, 2.5, 1.5);
-    trump.add(leftHand);
+    elPresidente.add(leftHand);
 
     const rightHand = new THREE.Mesh(handGeo, skinMat);
     rightHand.position.set(0.8, 2.5, 1.5);
-    trump.add(rightHand);
+    elPresidente.add(rightHand);
 
-    // SHOTGUN
-    const shotgunGroup = new THREE.Group();
+    // Baton/Scepter instead of shotgun
+    const scepterGroup = new THREE.Group();
 
-    // Barrel (dark metal)
-    const barrelMat = new THREE.MeshLambertMaterial({ color: 0x2a2a2a });
-    const barrel = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.08, 0.08, 2.5, 8),
-        barrelMat
+    const scepterMat = new THREE.MeshLambertMaterial({ color: 0x8b4513 });
+    const scepterStick = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.06, 0.06, 1.5, 8),
+        scepterMat
     );
-    barrel.rotation.x = Math.PI / 2;
-    barrel.position.z = 1.2;
-    shotgunGroup.add(barrel);
+    scepterStick.rotation.x = Math.PI / 2;
+    scepterStick.position.z = 0.8;
+    scepterGroup.add(scepterStick);
 
-    // Second barrel (double barrel shotgun)
-    const barrel2 = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.08, 0.08, 2.5, 8),
-        barrelMat
+    // Gold ornament on scepter
+    const scepterTop = new THREE.Mesh(
+        new THREE.SphereGeometry(0.15, 8, 8),
+        goldMat
     );
-    barrel2.rotation.x = Math.PI / 2;
-    barrel2.position.set(0.18, 0, 1.2);
-    shotgunGroup.add(barrel2);
+    scepterTop.position.z = 1.6;
+    scepterGroup.add(scepterTop);
 
-    // Stock (wood)
-    const stockMat = new THREE.MeshLambertMaterial({ color: 0x5a3a1a });
-    const stock = new THREE.Mesh(
-        new THREE.BoxGeometry(0.25, 0.3, 0.8),
-        stockMat
-    );
-    stock.position.z = -0.4;
-    shotgunGroup.add(stock);
+    scepterGroup.position.set(0, 2.5, 1);
+    elPresidente.add(scepterGroup);
+    elPresidente.scepter = scepterGroup;
 
-    // Grip
-    const grip = new THREE.Mesh(
-        new THREE.BoxGeometry(0.15, 0.4, 0.2),
-        stockMat
-    );
-    grip.position.set(0.05, -0.2, 0.1);
-    grip.rotation.x = 0.3;
-    shotgunGroup.add(grip);
-
-    // Muzzle flash (glowing)
-    const flashMat = new THREE.MeshBasicMaterial({ color: 0xff6600 });
-    const flash = new THREE.Mesh(
-        new THREE.ConeGeometry(0.15, 0.3, 6),
-        flashMat
-    );
-    flash.rotation.x = -Math.PI / 2;
-    flash.position.z = 2.5;
-    flash.visible = false; // Will animate
-    shotgunGroup.add(flash);
-    trump.shotgunFlash = flash;
-
-    shotgunGroup.position.set(0, 2.5, 1);
-    trump.add(shotgunGroup);
-    trump.shotgun = shotgunGroup;
-
-    // Legs
+    // Legs in military pants
     const legGeo = new THREE.BoxGeometry(0.6, 1.8, 0.5);
 
-    const leftLeg = new THREE.Mesh(legGeo, suitMat);
+    const leftLeg = new THREE.Mesh(legGeo, uniformMat);
     leftLeg.position.set(-0.5, 0.9, 0);
-    trump.add(leftLeg);
-    trump.leftLeg = leftLeg;
+    elPresidente.add(leftLeg);
+    elPresidente.leftLeg = leftLeg;
 
-    const rightLeg = new THREE.Mesh(legGeo, suitMat);
+    const rightLeg = new THREE.Mesh(legGeo, uniformMat);
     rightLeg.position.set(0.5, 0.9, 0);
-    trump.add(rightLeg);
-    trump.rightLeg = rightLeg;
+    elPresidente.add(rightLeg);
+    elPresidente.rightLeg = rightLeg;
 
-    // Add a red glow behind Trump (dramatic effect)
-    const trumpGlow = new THREE.PointLight(0xff4444, 0.8, 20);
-    trumpGlow.position.set(0, 3, -2);
-    trump.add(trumpGlow);
+    // Add a red glow behind elPresidente (dramatic effect)
+    const chaserGlow = new THREE.PointLight(0xff4444, 0.8, 20);
+    chaserGlow.position.set(0, 3, -2);
+    elPresidente.add(chaserGlow);
 
-    trump.position.set(0, 0, CONFIG.trumpDistance);
-    scene.add(trump);
+    elPresidente.position.set(0, 0, CONFIG.chaserDistance);
+    scene.add(elPresidente);
 }
 
 // ============================================
@@ -1521,8 +1522,8 @@ function animate(currentTime = 0) {
         tile.position.z += moveAmount;
     });
 
-    // Move Trump (chaser)
-    trump.position.z += moveAmount * CONFIG.trumpSpeedMultiplier;
+    // Move elPresidente (chaser)
+    elPresidente.position.z += moveAmount * CONFIG.elPresidenteSpeedMultiplier;
 
     // Update distance
     gameState.distance += moveAmount * CONFIG.distanceMultiplier;
@@ -1539,8 +1540,8 @@ function animate(currentTime = 0) {
     // Animate character running
     animateCharacter(currentTime);
 
-    // Animate Trump
-    animateTrump(currentTime);
+    // Animate elPresidente
+    animateelPresidente(currentTime);
 
     // Check collisions
     checkCollisions();
@@ -1641,60 +1642,60 @@ function animateCharacter(time) {
     }
 }
 
-function animateTrump(time) {
+function animateelPresidente(time) {
     const runCycle = Math.sin(time * 0.012) * 0.3;
 
-    // Make Trump follow player's lane
+    // Make elPresidente follow player's lane
     const targetX = gameState.currentLane * CONFIG.laneWidth;
-    trump.position.x += (targetX - trump.position.x) * 0.02;
+    elPresidente.position.x += (targetX - elPresidente.position.x) * 0.02;
 
     // Arm swing (aggressive reaching)
-    if (trump.leftArm && trump.rightArm) {
-        trump.leftArm.rotation.x = runCycle - 0.3;
-        trump.rightArm.rotation.x = -runCycle - 0.3;
+    if (elPresidente.leftArm && elPresidente.rightArm) {
+        elPresidente.leftArm.rotation.x = runCycle - 0.3;
+        elPresidente.rightArm.rotation.x = -runCycle - 0.3;
     }
 
     // Leg movement
-    if (trump.leftLeg && trump.rightLeg) {
-        trump.leftLeg.rotation.x = -runCycle * 0.5;
-        trump.rightLeg.rotation.x = runCycle * 0.5;
+    if (elPresidente.leftLeg && elPresidente.rightLeg) {
+        elPresidente.leftLeg.rotation.x = -runCycle * 0.5;
+        elPresidente.rightLeg.rotation.x = runCycle * 0.5;
     }
 
     // Bobbing
-    trump.position.y = Math.sin(time * 0.01) * 0.3;
+    elPresidente.position.y = Math.sin(time * 0.01) * 0.3;
 
     // Scale up when close
-    if (trump.position.z < 10) {
-        trump.scale.setScalar(1 + (10 - trump.position.z) * 0.02);
+    if (elPresidente.position.z < 10) {
+        elPresidente.scale.setScalar(1 + (10 - elPresidente.position.z) * 0.02);
     } else {
-        trump.scale.setScalar(1);
+        elPresidente.scale.setScalar(1);
     }
 
     // Shotgun flash effect (random shots when close)
-    if (trump.shotgunFlash && trump.position.z < 12) {
+    if (elPresidente.shotgunFlash && elPresidente.position.z < 12) {
         if (Math.random() < 0.02) { // 2% chance per frame
-            trump.shotgunFlash.visible = true;
-            trump.shotgunFlash.scale.setScalar(0.5 + Math.random());
+            elPresidente.shotgunFlash.visible = true;
+            elPresidente.shotgunFlash.scale.setScalar(0.5 + Math.random());
             setTimeout(() => {
-                if (trump.shotgunFlash) trump.shotgunFlash.visible = false;
+                if (elPresidente.shotgunFlash) elPresidente.shotgunFlash.visible = false;
             }, 50);
         }
     }
 
-    // Update Trump distance in HUD
-    const trumpDist = Math.max(0, Math.floor(trump.position.z));
-    document.getElementById('trump-dist').textContent = trumpDist;
+    // Update elPresidente distance in HUD
+    const elPresidenteDist = Math.max(0, Math.floor(elPresidente.position.z));
+    document.getElementById('elPresidente-dist').textContent = elPresidenteDist;
 
     // Update danger bar (inverse of distance - closer = more danger)
-    const dangerPercent = Math.min(100, Math.max(0, (15 - trump.position.z) / 15 * 100));
+    const dangerPercent = Math.min(100, Math.max(0, (15 - elPresidente.position.z) / 15 * 100));
     document.getElementById('danger-fill').style.width = dangerPercent + '%';
 
-    // Pulse the trump distance display when danger is high
-    const trumpDisplay = document.getElementById('trump-distance');
+    // Pulse the elPresidente distance display when danger is high
+    const elPresidenteDisplay = document.getElementById('elPresidente-distance');
     if (dangerPercent > 70) {
-        trumpDisplay.style.animation = 'introFlash 0.3s ease-in-out infinite alternate';
+        elPresidenteDisplay.style.animation = 'introFlash 0.3s ease-in-out infinite alternate';
     } else {
-        trumpDisplay.style.animation = 'none';
+        elPresidenteDisplay.style.animation = 'none';
     }
 }
 
@@ -1733,8 +1734,8 @@ function checkCollisions() {
         }
     });
 
-    // Check if Trump caught up
-    if (trump.position.z < CONFIG.trumpCatchDistance) {
+    // Check if elPresidente caught up
+    if (elPresidente.position.z < CONFIG.elPresidenteCatchDistance) {
         gameOver('caught');
     }
 }
@@ -1865,9 +1866,9 @@ function updateDifficulty() {
     // Start at 0.4, max out at 0.8 at 2000m
     CONFIG.obstacleFrequency = Math.min(0.4 + (distance / 5000), 0.8);
 
-    // Trump gets faster the further you go
+    // elPresidente gets faster the further you go
     // Start at 0.983, decrease to 0.95 at 2000m (faster catch-up)
-    CONFIG.trumpSpeedMultiplier = Math.max(0.983 - (distance / 40000), 0.95);
+    CONFIG.elPresidenteSpeedMultiplier = Math.max(0.983 - (distance / 40000), 0.95);
 
     // Increase max speed gradually
     CONFIG.maxSpeed = Math.min(2.5 + (distance / 1500), 4.0);
@@ -1925,7 +1926,7 @@ function showEnvironmentName(name) {
         document.getElementById('game-container').appendChild(indicator);
     }
 
-    indicator.textContent = `📍 ${name}`;
+    indicator.textContent = `ðŸ“ ${name}`;
     indicator.style.opacity = '1';
 
     setTimeout(() => {
@@ -1959,17 +1960,17 @@ function playIntroAnimation(callback) {
     introEl.classList.remove('hidden');
     textEl.textContent = "RUN!";
 
-    // Position Trump close
-    trump.position.z = 8;
-    trump.position.x = 0;
-    trump.scale.setScalar(1.3);
-    if (trump.shotgunFlash) trump.shotgunFlash.visible = true;
+    // Position elPresidente close
+    elPresidente.position.z = 8;
+    elPresidente.position.x = 0;
+    elPresidente.scale.setScalar(1.3);
+    if (elPresidente.shotgunFlash) elPresidente.shotgunFlash.visible = true;
 
     // Character ready
     character.position.set(0, 0, 0);
     character.rotation.set(0, 0, 0);
 
-    // Camera shows both Trump and player
+    // Camera shows both elPresidente and player
     camera.position.set(0, 12, 22);
     camera.lookAt(0, 2, 0);
 
@@ -1978,9 +1979,9 @@ function playIntroAnimation(callback) {
     // Quick animation - camera settles and game starts
     setTimeout(() => {
         introEl.classList.add('hidden');
-        if (trump.shotgunFlash) trump.shotgunFlash.visible = false;
-        trump.position.z = CONFIG.trumpDistance;
-        trump.scale.setScalar(1);
+        if (elPresidente.shotgunFlash) elPresidente.shotgunFlash.visible = false;
+        elPresidente.position.z = CONFIG.elPresidenteDistance;
+        elPresidente.scale.setScalar(1);
         camera.position.set(0, 10, 20);
         callback();
     }, 600);
@@ -2002,10 +2003,10 @@ function restartGame() {
         generateTile();
     }
 
-    // Reset Trump position
-    trump.position.z = CONFIG.trumpDistance;
-    trump.position.x = 0;
-    trump.scale.setScalar(1);
+    // Reset elPresidente position
+    elPresidente.position.z = CONFIG.elPresidenteDistance;
+    elPresidente.position.x = 0;
+    elPresidente.scale.setScalar(1);
 
     // Recreate character
     createCharacter(gameState.selectedCharacter);
@@ -2030,7 +2031,7 @@ function resetGameState() {
 
     // Reset difficulty to initial values
     CONFIG.obstacleFrequency = 0.4;
-    CONFIG.trumpSpeedMultiplier = 0.983;
+    CONFIG.elPresidenteSpeedMultiplier = 0.983;
     CONFIG.maxSpeed = 2.5;
     CONFIG.speedIncrease = 0.0007;
 
@@ -2052,12 +2053,12 @@ function resetGameState() {
 }
 
 const CAUGHT_MESSAGES = [
-    "You're fired... and arrested!",
-    "Justice has been served!",
-    "No one escapes the law!",
-    "Make America Arrest Again!",
+    "El Presidente has caught you!",
+    "No one escapes the regime!",
+    "To the dungeon with you!",
     "The chase is over!",
-    "Caught red-handed!",
+    "Resistance is futile!",
+    "Another escapee captured!",
 ];
 
 function gameOver(reason = 'obstacle') {
@@ -2075,9 +2076,9 @@ function gameOver(reason = 'obstacle') {
         AudioSystem.playCaughtSound();
         playCatchAnimation();
     } else {
-        // Just tripped - Trump catches up
+        // Just tripped - elPresidente catches up
         AudioSystem.playCrashSound();
-        document.getElementById('caught-text').textContent = "You tripped! Trump caught up!";
+        document.getElementById('caught-text').textContent = "You tripped! elPresidente caught up!";
 
         setTimeout(() => {
             document.getElementById('gameover-screen').classList.remove('hidden');
@@ -2095,15 +2096,15 @@ function gameOver(reason = 'obstacle') {
 }
 
 function playCatchAnimation() {
-    // Step 1: Trump rushes forward
-    trump.position.z = 3;
-    trump.position.x = character.position.x;
-    trump.scale.setScalar(1.3);
+    // Step 1: elPresidente rushes forward
+    elPresidente.position.z = 3;
+    elPresidente.position.x = character.position.x;
+    elPresidente.scale.setScalar(1.3);
 
     // Shotgun flash burst
-    if (trump.shotgunFlash) {
-        trump.shotgunFlash.visible = true;
-        trump.shotgunFlash.scale.setScalar(2);
+    if (elPresidente.shotgunFlash) {
+        elPresidente.shotgunFlash.visible = true;
+        elPresidente.shotgunFlash.scale.setScalar(2);
     }
 
     // Character reacts - falls back
@@ -2124,19 +2125,19 @@ function playCatchAnimation() {
         }
     }, 50);
 
-    // Step 2: Trump looms over (after 300ms)
+    // Step 2: elPresidente looms over (after 300ms)
     setTimeout(() => {
-        trump.position.z = 1;
-        trump.scale.setScalar(1.5);
-        if (trump.shotgunFlash) trump.shotgunFlash.visible = false;
+        elPresidente.position.z = 1;
+        elPresidente.scale.setScalar(1.5);
+        if (elPresidente.shotgunFlash) elPresidente.shotgunFlash.visible = false;
 
         // Character on ground
         character.rotation.x = -1.2;
         character.position.y = 0;
         character.rotation.z = 0.3;
 
-        // Show Trump speech bubble
-        showTrumpSpeech();
+        // Show dictator speech bubble
+        showDictatorSpeech();
     }, 300);
 
     // Step 3: Set caught message
@@ -2147,47 +2148,47 @@ function playCatchAnimation() {
 
     // Step 4: Show game over screen (after dramatic pause)
     setTimeout(() => {
-        hideTrumpSpeech();
+        hideDictatorSpeech();
         document.getElementById('gameover-screen').classList.remove('hidden');
     }, 1800);
 }
 
-const TRUMP_QUOTES = [
-    "You're FIRED!",
-    "Sad!",
-    "Lock 'em up!",
-    "Believe me!",
-    "HUGE mistake!",
-    "No collusion!",
-    "Tremendous catch!",
+const DICTATOR_QUOTES = [
+    "¡No escape!",
+    "To the dungeon!",
+    "You dare run?!",
+    "CAPTURED!",
+    "My guards never fail!",
+    "Resistance is futile!",
+    "¡Viva elPresidente!",
 ];
 
-function showTrumpSpeech() {
-    let bubble = document.getElementById('trump-speech');
+function showDictatorSpeech() {
+    let bubble = document.getElementById('dictator-speech');
     if (!bubble) {
         bubble = document.createElement('div');
-        bubble.id = 'trump-speech';
+        bubble.id = 'dictator-speech';
         bubble.style.cssText = `
             position: fixed;
             top: 25%;
             left: 50%;
             transform: translateX(-50%);
-            background: white;
-            color: #cc0000;
+            background: #2a4a2a;
+            color: #ffd700;
             padding: 15px 25px;
             border-radius: 15px;
             font-family: 'Bebas Neue', sans-serif;
             font-size: 28px;
             z-index: 200;
             box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-            border: 3px solid #cc0000;
-            animation: trumpPop 0.3s ease-out;
+            border: 3px solid #ffd700;
+            animation: dictatorPop 0.3s ease-out;
         `;
 
         // Add animation keyframes
         const style = document.createElement('style');
         style.textContent = `
-            @keyframes trumpPop {
+            @keyframes dictatorPop {
                 0% { transform: translateX(-50%) scale(0); }
                 50% { transform: translateX(-50%) scale(1.2); }
                 100% { transform: translateX(-50%) scale(1); }
@@ -2198,12 +2199,12 @@ function showTrumpSpeech() {
         document.getElementById('game-container').appendChild(bubble);
     }
 
-    bubble.textContent = TRUMP_QUOTES[Math.floor(Math.random() * TRUMP_QUOTES.length)];
+    bubble.textContent = DICTATOR_QUOTES[Math.floor(Math.random() * DICTATOR_QUOTES.length)];
     bubble.style.display = 'block';
 }
 
-function hideTrumpSpeech() {
-    const bubble = document.getElementById('trump-speech');
+function hideDictatorSpeech() {
+    const bubble = document.getElementById('dictator-speech');
     if (bubble) {
         bubble.style.display = 'none';
     }

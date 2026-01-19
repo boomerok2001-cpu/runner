@@ -16,14 +16,14 @@ export async function GET() {
         },
         miniapp: withValidProperties({
             version: "1",
-            name: "Run From Justice",
+            name: "Run From El Presidente",
             homeUrl: URL,
             iconUrl: `${URL}/icon.png`,
             splashImageUrl: `${URL}/splash.png`,
             splashBackgroundColor: "#0d0d0d",
             webhookUrl: `${URL}/api/webhook`,
-            subtitle: "Escape the long arm of the law!",
-            description: "An exciting endless runner game where you dodge obstacles and collect coins while evading justice. How far can you run?",
+            subtitle: "Escape the dictator's grasp!",
+            description: "An exciting endless runner game where you dodge obstacles and collect coins while evading El Presidente. How far can you run?",
             screenshotUrls: [
                 `${URL}/screenshot1.png`,
                 `${URL}/screenshot2.png`
@@ -31,9 +31,9 @@ export async function GET() {
             primaryCategory: "games",
             tags: ["game", "runner", "endless", "arcade"],
             heroImageUrl: `${URL}/splash.png`,
-            tagline: "Can you outrun justice?",
-            ogTitle: "Run From Justice",
-            ogDescription: "An endless runner game - dodge obstacles, collect coins, evade justice!",
+            tagline: "Can you outrun El Presidente?",
+            ogTitle: "Run From El Presidente",
+            ogDescription: "An endless runner game - dodge obstacles, collect coins, escape the dictator!",
             ogImageUrl: `${URL}/splash.png`
         })
     });

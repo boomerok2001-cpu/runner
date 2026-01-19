@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import sdk from "@farcaster/miniapp-sdk";
@@ -61,7 +61,7 @@ export default function Game() {
             <span id="coin-count">0</span>
           </div>
           <div id="kids-display">
-            <div className="kids-icon">👦</div>
+            <div className="kids-icon">ðŸ‘¦</div>
             <span id="kids-count">0</span>
           </div>
           <div id="distance-display">
@@ -72,10 +72,10 @@ export default function Game() {
           </div>
         </div>
 
-        {/* Trump Distance Indicator */}
-        <div id="trump-distance">
-          <div className="trump-icon">⚖️</div>
-          <span id="trump-dist">15</span>m
+        {/* El Presidente Distance Indicator */}
+        <div id="chaser-distance">
+          <div className="chaser-icon">âš–ï¸</div>
+          <span id="chaser-dist">15</span>m
           <div className="danger-bar">
             <div className="danger-fill" id="danger-fill"></div>
           </div>
@@ -84,7 +84,7 @@ export default function Game() {
         {/* Intro Animation */}
         <div id="intro-animation" className="hidden">
           <div className="intro-content">
-            <div className="intro-text" id="intro-text">JUSTICE IS COMING!</div>
+            <div className="intro-text" id="intro-text">EL PRESIDENTE IS COMING!</div>
           </div>
         </div>
 
@@ -93,22 +93,22 @@ export default function Game() {
           <div className="menu-container">
             {/* Game Logo */}
             <div className="logo-section">
-              <h1 className="game-title">RUN FROM JUSTICE</h1>
-              <p className="tagline">Can you escape the long arm of the law?</p>
+              <h1 className="game-title">RUN FROM EL PRESIDENTE</h1>
+              <p className="tagline">Can you escape the dictator&apos;s grasp?</p>
             </div>
 
             {/* Tab Navigation */}
             <div className="tab-nav">
               <button className="tab-btn active" data-tab="play">
-                <span className="tab-icon">🎮</span>
+                <span className="tab-icon">ðŸŽ®</span>
                 <span className="tab-text">PLAY</span>
               </button>
               <button className="tab-btn" data-tab="leaderboard">
-                <span className="tab-icon">🏆</span>
+                <span className="tab-icon">ðŸ†</span>
                 <span className="tab-text">SCORES</span>
               </button>
               <button className="tab-btn" data-tab="settings">
-                <span className="tab-icon">⚙️</span>
+                <span className="tab-icon">âš™ï¸</span>
                 <span className="tab-text">SETTINGS</span>
               </button>
             </div>
@@ -162,17 +162,17 @@ export default function Game() {
                     <span>DISTANCE</span>
                   </div>
                   <div className="leaderboard-row gold">
-                    <span className="rank">🥇</span>
+                    <span className="rank">ðŸ¥‡</span>
                     <span className="lb-score" id="lb-score-1">---</span>
                     <span className="lb-dist" id="lb-dist-1">---</span>
                   </div>
                   <div className="leaderboard-row silver">
-                    <span className="rank">🥈</span>
+                    <span className="rank">ðŸ¥ˆ</span>
                     <span className="lb-score" id="lb-score-2">---</span>
                     <span className="lb-dist" id="lb-dist-2">---</span>
                   </div>
                   <div className="leaderboard-row bronze">
-                    <span className="rank">🥉</span>
+                    <span className="rank">ðŸ¥‰</span>
                     <span className="lb-score" id="lb-score-3">---</span>
                     <span className="lb-dist" id="lb-dist-3">---</span>
                   </div>
@@ -231,7 +231,7 @@ export default function Game() {
         <div id="gameover-screen" className="overlay hidden">
           <div className="gameover-container">
             <h1 className="game-over-title">YOU GOT CAUGHT</h1>
-            <div className="handcuffs-icon">⛓️</div>
+            <div className="handcuffs-icon">â›“ï¸</div>
             <p className="caught-text" id="caught-text">You&apos;ve been caught!</p>
             <div className="final-stats">
               <div className="stat-row">

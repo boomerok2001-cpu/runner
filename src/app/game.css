@@ -1,4 +1,4 @@
-/* Run From Justice - Professional UI */
+﻿/* Run From Justice - Professional UI */
 * {
     margin: 0;
     padding: 0;
@@ -131,9 +131,9 @@ body {
 }
 
 /* ============================================
-   TRUMP DISTANCE INDICATOR
+   EL PRESIDENTE DISTANCE INDICATOR
    ============================================ */
-#trump-distance {
+#chaser-distance {
     position: absolute;
     bottom: 25px;
     left: 50%;
@@ -155,11 +155,11 @@ body {
     backdrop-filter: blur(10px);
 }
 
-.trump-icon {
+.chaser-icon {
     font-size: 24px;
 }
 
-#trump-dist {
+#chaser-dist {
     font-size: 26px;
     font-weight: bold;
     color: #ff6666;
@@ -982,7 +982,7 @@ body {
         font-size: 14px;
     }
 
-    #trump-distance {
+    #chaser-distance {
         padding: 10px 20px;
     }
 
