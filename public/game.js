@@ -61,6 +61,293 @@ let gameState = {
     highScore: parseInt(localStorage.getItem('runFromJusticeHighScore')) || 0,
     selectedCharacter: 'runner1',
     kids: 0,
+    currentEnvironment: 0,
+};
+
+// ============================================
+// ENVIRONMENT THEMES (change based on distance)
+// ============================================
+const ENVIRONMENTS = [
+    { // City Night (0-500m)
+        name: 'City Night',
+        fog: 0x0a0a1a,
+        sky: 0x0a0a1a,
+        road: 0x2a2a2a,
+        buildings: [0x3a3a4a, 0x4a4a5a, 0x2a2a3a, 0x5a5a6a],
+        ambient: 0x334466,
+        windowLight: 0xffffaa
+    },
+    { // Highway (500-1000m)
+        name: 'Highway',
+        fog: 0x1a1a2a,
+        sky: 0x0d1020,
+        road: 0x3a3a3a,
+        buildings: [0x2a3a4a, 0x3a4a5a, 0x1a2a3a],
+        ambient: 0x445566,
+        windowLight: 0xffcc77
+    },
+    { // Industrial (1000-1500m)
+        name: 'Industrial',
+        fog: 0x1a1510,
+        sky: 0x151210,
+        road: 0x252520,
+        buildings: [0x4a4540, 0x5a5550, 0x3a3530],
+        ambient: 0x554433,
+        windowLight: 0xff8844
+    },
+    { // Airport (1500-2000m)
+        name: 'Airport',
+        fog: 0x0a1020,
+        sky: 0x050810,
+        road: 0x2a2a30,
+        buildings: [0x3a3a4a, 0x4a4a5a, 0x2a2a3a],
+        ambient: 0x334455,
+        windowLight: 0x00ffff
+    },
+    { // Border (2000m+)
+        name: 'Border',
+        fog: 0x101510,
+        sky: 0x0a0f0a,
+        road: 0x202520,
+        buildings: [0x354035, 0x405040, 0x253025],
+        ambient: 0x223322,
+        windowLight: 0x44ff44
+    }
+];
+
+// ============================================
+// AUDIO SYSTEM
+// ============================================
+const AudioSystem = {
+    bgMusic: null,
+    sounds: {},
+    musicVolume: 0.3,
+    sfxVolume: 0.5,
+    enabled: true,
+
+    init() {
+        // Create audio context on user interaction
+        this.audioContext = null;
+
+        // Background music - calm synth
+        this.bgMusic = new Audio();
+        this.bgMusic.loop = true;
+        this.bgMusic.volume = this.musicVolume;
+
+        // Generate procedural background music
+        this.createProceduralMusic();
+
+        // Sound effects using oscillators
+        this.initSoundEffects();
+    },
+
+    createProceduralMusic() {
+        // Use Web Audio API for procedural calm music
+        try {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            this.musicGain = this.audioContext.createGain();
+            this.musicGain.gain.value = this.musicVolume;
+            this.musicGain.connect(this.audioContext.destination);
+        } catch (e) {
+            console.log('Web Audio not supported');
+        }
+    },
+
+    initSoundEffects() {
+        // Will create sounds on demand using oscillators
+    },
+
+    playMusic() {
+        if (!this.enabled || !this.audioContext) return;
+
+        // Create calm ambient music loop
+        this.playAmbientLoop();
+    },
+
+    playAmbientLoop() {
+        if (!this.audioContext || this.ambientPlaying) return;
+        this.ambientPlaying = true;
+
+        const playNote = (freq, time, duration) => {
+            const osc = this.audioContext.createOscillator();
+            const gain = this.audioContext.createGain();
+
+            osc.type = 'sine';
+            osc.frequency.value = freq;
+
+            gain.gain.setValueAtTime(0, time);
+            gain.gain.linearRampToValueAtTime(0.05 * this.musicVolume, time + 0.1);
+            gain.gain.linearRampToValueAtTime(0, time + duration);
+
+            osc.connect(gain);
+            gain.connect(this.audioContext.destination);
+
+            osc.start(time);
+            osc.stop(time + duration);
+        };
+
+        // Calm chord progression
+        const chords = [
+            [220, 277, 330], // Am
+            [196, 247, 294], // G
+            [175, 220, 262], // F
+            [165, 208, 247], // E
+        ];
+
+        const playLoop = () => {
+            if (!gameState.isRunning && !this.ambientPlaying) return;
+
+            const now = this.audioContext.currentTime;
+            const chordDuration = 2;
+
+            chords.forEach((chord, i) => {
+                chord.forEach(note => {
+                    playNote(note, now + i * chordDuration, chordDuration * 0.9);
+                });
+            });
+
+            // Schedule next loop
+            setTimeout(() => {
+                if (gameState.isRunning) playLoop();
+            }, chords.length * chordDuration * 1000);
+        };
+
+        playLoop();
+    },
+
+    stopMusic() {
+        this.ambientPlaying = false;
+    },
+
+    playCoinSound() {
+        if (!this.enabled || !this.audioContext) return;
+
+        const osc = this.audioContext.createOscillator();
+        const gain = this.audioContext.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, this.audioContext.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1760, this.audioContext.currentTime + 0.1);
+
+        gain.gain.setValueAtTime(this.sfxVolume * 0.3, this.audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.2);
+
+        osc.connect(gain);
+        gain.connect(this.audioContext.destination);
+
+        osc.start();
+        osc.stop(this.audioContext.currentTime + 0.2);
+    },
+
+    playJumpSound() {
+        if (!this.enabled || !this.audioContext) return;
+
+        const osc = this.audioContext.createOscillator();
+        const gain = this.audioContext.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(200, this.audioContext.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(400, this.audioContext.currentTime + 0.15);
+
+        gain.gain.setValueAtTime(this.sfxVolume * 0.2, this.audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.15);
+
+        osc.connect(gain);
+        gain.connect(this.audioContext.destination);
+
+        osc.start();
+        osc.stop(this.audioContext.currentTime + 0.15);
+    },
+
+    playSlideSound() {
+        if (!this.enabled || !this.audioContext) return;
+
+        const noise = this.audioContext.createOscillator();
+        const gain = this.audioContext.createGain();
+
+        noise.type = 'sawtooth';
+        noise.frequency.value = 80;
+
+        gain.gain.setValueAtTime(this.sfxVolume * 0.1, this.audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3);
+
+        noise.connect(gain);
+        gain.connect(this.audioContext.destination);
+
+        noise.start();
+        noise.stop(this.audioContext.currentTime + 0.3);
+    },
+
+    playCrashSound() {
+        if (!this.enabled || !this.audioContext) return;
+
+        // Impact sound
+        const osc = this.audioContext.createOscillator();
+        const gain = this.audioContext.createGain();
+
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(150, this.audioContext.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(30, this.audioContext.currentTime + 0.3);
+
+        gain.gain.setValueAtTime(this.sfxVolume * 0.4, this.audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3);
+
+        osc.connect(gain);
+        gain.connect(this.audioContext.destination);
+
+        osc.start();
+        osc.stop(this.audioContext.currentTime + 0.3);
+    },
+
+    playCaughtSound() {
+        if (!this.enabled || !this.audioContext) return;
+
+        // Dramatic caught fanfare
+        const notes = [220, 175, 147, 110];
+        notes.forEach((freq, i) => {
+            setTimeout(() => {
+                const osc = this.audioContext.createOscillator();
+                const gain = this.audioContext.createGain();
+
+                osc.type = 'sawtooth';
+                osc.frequency.value = freq;
+
+                gain.gain.setValueAtTime(this.sfxVolume * 0.3, this.audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.4);
+
+                osc.connect(gain);
+                gain.connect(this.audioContext.destination);
+
+                osc.start();
+                osc.stop(this.audioContext.currentTime + 0.4);
+            }, i * 150);
+        });
+    },
+
+    playLaneChange() {
+        if (!this.enabled || !this.audioContext) return;
+
+        const osc = this.audioContext.createOscillator();
+        const gain = this.audioContext.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.value = 440;
+
+        gain.gain.setValueAtTime(this.sfxVolume * 0.1, this.audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.08);
+
+        osc.connect(gain);
+        gain.connect(this.audioContext.destination);
+
+        osc.start();
+        osc.stop(this.audioContext.currentTime + 0.08);
+    },
+
+    resume() {
+        if (this.audioContext && this.audioContext.state === 'suspended') {
+            this.audioContext.resume();
+        }
+    }
 };
 
 // ============================================
@@ -101,6 +388,9 @@ function init() {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    // Initialize audio system
+    AudioSystem.init();
 
     // Lighting
     setupLighting();
@@ -1177,16 +1467,19 @@ function changeLane(direction) {
     gameState.targetLane = gameState.currentLane + direction;
     gameState.laneChangeStartTime = performance.now();
     gameState.laneChangeStartPos = character.position.x;
+    AudioSystem.playLaneChange();
 }
 
 function jump() {
     gameState.isJumping = true;
     gameState.jumpStartTime = performance.now();
+    AudioSystem.playJumpSound();
 }
 
 function slide() {
     gameState.isSliding = true;
     gameState.slideStartTime = performance.now();
+    AudioSystem.playSlideSound();
 }
 
 function togglePause() {
@@ -1233,6 +1526,12 @@ function animate(currentTime = 0) {
 
     // Update distance
     gameState.distance += moveAmount * CONFIG.distanceMultiplier;
+
+    // Update difficulty based on distance
+    updateDifficulty();
+
+    // Update environment based on distance
+    updateEnvironment();
 
     // Update character
     updateCharacter(currentTime);
@@ -1465,6 +1764,7 @@ function collectMoney() {
 function flashMoneyCollect() {
     const moneyDisplay = document.getElementById('coins-display');
     moneyDisplay.style.transform = 'scale(1.2)';
+    AudioSystem.playCoinSound();
     setTimeout(() => {
         moneyDisplay.style.transform = 'scale(1)';
     }, 100);
@@ -1556,10 +1856,92 @@ function easeOutCubic(t) {
 }
 
 // ============================================
+// DIFFICULTY & ENVIRONMENT PROGRESSION
+// ============================================
+function updateDifficulty() {
+    const distance = gameState.distance;
+
+    // Increase obstacle frequency based on distance
+    // Start at 0.4, max out at 0.8 at 2000m
+    CONFIG.obstacleFrequency = Math.min(0.4 + (distance / 5000), 0.8);
+
+    // Trump gets faster the further you go
+    // Start at 0.983, decrease to 0.95 at 2000m (faster catch-up)
+    CONFIG.trumpSpeedMultiplier = Math.max(0.983 - (distance / 40000), 0.95);
+
+    // Increase max speed gradually
+    CONFIG.maxSpeed = Math.min(2.5 + (distance / 1500), 4.0);
+
+    // Speed increases faster as you progress
+    CONFIG.speedIncrease = 0.0007 + (distance / 500000);
+}
+
+function updateEnvironment() {
+    const distance = gameState.distance;
+    let envIndex = 0;
+
+    // Determine which environment based on distance
+    if (distance >= 2000) envIndex = 4;      // Border
+    else if (distance >= 1500) envIndex = 3; // Airport
+    else if (distance >= 1000) envIndex = 2; // Industrial
+    else if (distance >= 500) envIndex = 1;  // Highway
+    else envIndex = 0;                        // City Night
+
+    // Only update if environment changed
+    if (envIndex !== gameState.currentEnvironment) {
+        gameState.currentEnvironment = envIndex;
+        const env = ENVIRONMENTS[envIndex];
+
+        // Smoothly transition scene colors
+        scene.background = new THREE.Color(env.sky);
+        scene.fog.color = new THREE.Color(env.fog);
+
+        // Show environment name briefly
+        showEnvironmentName(env.name);
+    }
+}
+
+function showEnvironmentName(name) {
+    // Create or update environment indicator
+    let indicator = document.getElementById('env-indicator');
+    if (!indicator) {
+        indicator = document.createElement('div');
+        indicator.id = 'env-indicator';
+        indicator.style.cssText = `
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.3s;
+        `;
+        document.getElementById('game-container').appendChild(indicator);
+    }
+
+    indicator.textContent = `📍 ${name}`;
+    indicator.style.opacity = '1';
+
+    setTimeout(() => {
+        indicator.style.opacity = '0';
+    }, 2000);
+}
+
+// ============================================
 // GAME STATE MANAGEMENT
 // ============================================
 function startGame() {
     document.getElementById('start-screen').classList.add('hidden');
+
+    // Resume audio context (required after user interaction)
+    AudioSystem.resume();
+    AudioSystem.playMusic();
 
     // Show intro animation
     playIntroAnimation(() => {
@@ -1644,12 +2026,27 @@ function resetGameState() {
     gameState.isJumping = false;
     gameState.isSliding = false;
     gameState.isPaused = false;
+    gameState.currentEnvironment = 0;
+
+    // Reset difficulty to initial values
+    CONFIG.obstacleFrequency = 0.4;
+    CONFIG.trumpSpeedMultiplier = 0.983;
+    CONFIG.maxSpeed = 2.5;
+    CONFIG.speedIncrease = 0.0007;
+
+    // Reset scene colors to city night
+    scene.background = new THREE.Color(0x0a0a1a);
+    scene.fog.color = new THREE.Color(0x0a0a1a);
 
     if (character) {
         character.position.set(0, 0, 0);
         character.rotation.set(0, 0, 0);
         character.scale.set(1, 1, 1);
     }
+
+    // Restart music
+    AudioSystem.resume();
+    AudioSystem.playMusic();
 
     updateHUD();
 }
@@ -1665,6 +2062,7 @@ const CAUGHT_MESSAGES = [
 
 function gameOver(reason = 'obstacle') {
     gameState.isRunning = false;
+    AudioSystem.stopMusic();
 
     if (gameState.score > gameState.highScore) {
         gameState.highScore = gameState.score;
@@ -1674,9 +2072,11 @@ function gameOver(reason = 'obstacle') {
     // Dramatic catch animation
     if (reason === 'caught') {
         // Show dramatic catch sequence
+        AudioSystem.playCaughtSound();
         playCatchAnimation();
     } else {
         // Just tripped - Trump catches up
+        AudioSystem.playCrashSound();
         document.getElementById('caught-text').textContent = "You tripped! Trump caught up!";
 
         setTimeout(() => {
@@ -1734,6 +2134,9 @@ function playCatchAnimation() {
         character.rotation.x = -1.2;
         character.position.y = 0;
         character.rotation.z = 0.3;
+
+        // Show Trump speech bubble
+        showTrumpSpeech();
     }, 300);
 
     // Step 3: Set caught message
@@ -1744,8 +2147,66 @@ function playCatchAnimation() {
 
     // Step 4: Show game over screen (after dramatic pause)
     setTimeout(() => {
+        hideTrumpSpeech();
         document.getElementById('gameover-screen').classList.remove('hidden');
-    }, 1200);
+    }, 1800);
+}
+
+const TRUMP_QUOTES = [
+    "You're FIRED!",
+    "Sad!",
+    "Lock 'em up!",
+    "Believe me!",
+    "HUGE mistake!",
+    "No collusion!",
+    "Tremendous catch!",
+];
+
+function showTrumpSpeech() {
+    let bubble = document.getElementById('trump-speech');
+    if (!bubble) {
+        bubble = document.createElement('div');
+        bubble.id = 'trump-speech';
+        bubble.style.cssText = `
+            position: fixed;
+            top: 25%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            color: #cc0000;
+            padding: 15px 25px;
+            border-radius: 15px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 28px;
+            z-index: 200;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            border: 3px solid #cc0000;
+            animation: trumpPop 0.3s ease-out;
+        `;
+
+        // Add animation keyframes
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes trumpPop {
+                0% { transform: translateX(-50%) scale(0); }
+                50% { transform: translateX(-50%) scale(1.2); }
+                100% { transform: translateX(-50%) scale(1); }
+            }
+        `;
+        document.head.appendChild(style);
+
+        document.getElementById('game-container').appendChild(bubble);
+    }
+
+    bubble.textContent = TRUMP_QUOTES[Math.floor(Math.random() * TRUMP_QUOTES.length)];
+    bubble.style.display = 'block';
+}
+
+function hideTrumpSpeech() {
+    const bubble = document.getElementById('trump-speech');
+    if (bubble) {
+        bubble.style.display = 'none';
+    }
 }
 
 function onWindowResize() {
