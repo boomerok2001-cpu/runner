@@ -908,7 +908,9 @@ function generateTile() {
 }
 
 function addBuildings(tile) {
-    const buildingColors = [0x3a3a4a, 0x4a4a5a, 0x2a2a3a, 0x5a5a6a];
+    // Use current environment's building colors
+    const env = ENVIRONMENTS[gameState.currentEnvironment];
+    const buildingColors = env.buildings;
 
     // Left side buildings
     for (let z = -10; z <= 10; z += 20) {
@@ -949,7 +951,9 @@ function addBuildings(tile) {
 }
 
 function addWindows(building, tile, height) {
-    const windowMat = new THREE.MeshBasicMaterial({ color: 0xffffaa });
+    // Use current environment's window light color
+    const env = ENVIRONMENTS[gameState.currentEnvironment];
+    const windowMat = new THREE.MeshBasicMaterial({ color: env.windowLight || 0xffffaa });
     const darkWindowMat = new THREE.MeshBasicMaterial({ color: 0x1a1a2a });
 
     const x = building.position.x;
@@ -1523,7 +1527,7 @@ function animate(currentTime = 0) {
     });
 
     // Move elPresidente (chaser)
-    elPresidente.position.z += moveAmount * CONFIG.elPresidenteSpeedMultiplier;
+    elPresidente.position.z += moveAmount * CONFIG.chaserSpeedMultiplier;
 
     // Update distance
     gameState.distance += moveAmount * CONFIG.distanceMultiplier;
@@ -1861,9 +1865,9 @@ function updateDifficulty() {
     // Start at 0.4, max out at 0.8 at 2000m
     CONFIG.obstacleFrequency = Math.min(0.4 + (distance / 5000), 0.8);
 
-    // elPresidente gets faster the further you go
+    // Chaser gets faster the further you go
     // Start at 0.983, decrease to 0.95 at 2000m (faster catch-up)
-    CONFIG.elPresidenteSpeedMultiplier = Math.max(0.983 - (distance / 40000), 0.95);
+    CONFIG.chaserSpeedMultiplier = Math.max(0.983 - (distance / 40000), 0.95);
 
     // Increase max speed gradually
     CONFIG.maxSpeed = Math.min(2.5 + (distance / 1500), 4.0);
